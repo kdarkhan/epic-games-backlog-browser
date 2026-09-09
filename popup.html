@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Claim Ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="title-block">
+      <span class="eyebrow">Epic Games Store</span>
+      <h1>Claim Ledger</h1>
+    </div>
+    <div class="topbar-actions">
+      <span class="updated" id="updated">not loaded yet</span>
+      <button id="refreshBtn" class="btn-primary">Refresh library</button>
+    </div>
+  </header>
+
+  <div id="progress" class="progress" hidden>
+    <span id="progressText">Resolving 0 titles&hellip;</span>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="bar">
+    <div class="bar-inner">
+      <div class="field">
+        <span class="field-label">Search</span>
+        <input type="search" id="q" placeholder="Title contains&hellip;" />
+      </div>
+      <div class="field">
+        <span class="field-label">Genre</span>
+        <div class="chiprow" id="genreChips"></div>
+      </div>
+      <div class="field">
+        <span class="field-label">Reviews</span>
+        <div class="chiprow" id="reviewChips"></div>
+      </div>
+      <div class="field">
+        <span class="field-label">Deck / Proton</span>
+        <div class="chiprow" id="protonChips"></div>
+      </div>
+      <div class="field">
+        <span class="field-label">Sort</span>
+        <select id="sort">
+          <option value="reviewscore">Best reviewed</option>
+          <option value="reviewcount">Most reviewed</option>
+          <option value="proton">Deck-friendliest</option>
+          <option value="title">Title A&ndash;Z</option>
+        </select>
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Genres</th>
+          <th>Steam reviews</th>
+          <th>Deck / Proton</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" hidden></div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
