@@ -7,7 +7,7 @@ let STEAM_CACHE = {};
 let GAMES = [];
 const REFRESHING = new Set();
 
-const state = { q: "", genre: null, review: null, proton: null, sort: "reviewscore" };
+const state = { q: "", genre: new Set(), review: new Set(), proton: new Set(), sort: "reviewscore" };
 
 const el = id => document.getElementById(id);
 
@@ -89,12 +89,21 @@ function reviewKey(g) {
 function buildChips(container, options, labelFn, stateKey) {
   container.innerHTML = "";
   options.forEach(opt => {
+    const selected = state[stateKey];
     const chip = document.createElement("button");
-    chip.className = "chip" + (state[stateKey] === opt ? " active" : "");
+    chip.className = "chip" + (selected.has(opt) ? " active" : "");
     chip.type = "button";
     chip.textContent = labelFn(opt);
-    chip.addEventListener("click", () => {
-      state[stateKey] = state[stateKey] === opt ? null : opt;
+    chip.title = "Click to select only this; Shift-click to add/remove from selection";
+    chip.addEventListener("click", (e) => {
+      if (e.shiftKey) {
+        if (selected.has(opt)) selected.delete(opt); else selected.add(opt);
+      } else if (selected.size === 1 && selected.has(opt)) {
+        selected.clear();
+      } else {
+        selected.clear();
+        selected.add(opt);
+      }
       renderFilters();
       renderTable();
     });
@@ -196,9 +205,9 @@ function renderTable() {
 
   let list = GAMES.filter(g => {
     if (state.q && !g.title.toLowerCase().includes(state.q)) return false;
-    if (state.genre && !(g.genres || []).includes(state.genre)) return false;
-    if (state.review && reviewKey(g) !== state.review) return false;
-    if (state.proton && protonKey(g) !== state.proton) return false;
+    if (state.genre.size && !(g.genres || []).some(gen => state.genre.has(gen))) return false;
+    if (state.review.size && !state.review.has(reviewKey(g))) return false;
+    if (state.proton.size && !state.proton.has(protonKey(g))) return false;
     return true;
   });
 
