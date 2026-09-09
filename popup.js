@@ -75,6 +75,7 @@ function pendingTitles() {
 function protonKey(g) {
   if (g.pending) return "pending";
   if (!g.steam_appid) return "unlisted";
+  if (g.linux_native) return "native";
   const t = (g.tier || "").toLowerCase();
   return PROTON_ORDER.includes(t) ? t : "pending";
 }

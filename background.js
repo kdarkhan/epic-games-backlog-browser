@@ -196,6 +196,10 @@ async function steamDetails(appid) {
     metacritic: d.metacritic?.score ?? null,
     is_free: d.is_free ?? null,
     release_date: d.release_date?.date ?? null,
+    // A native Linux build needs no Proton/Wine layer at all, which ProtonDB's own site
+    // treats as strictly better than any community-reported Proton tier — it shows
+    // "Native" instead of the tier in that case, so we mirror that at render time.
+    linux_native: d.platforms?.linux ?? false,
   };
 }
 
