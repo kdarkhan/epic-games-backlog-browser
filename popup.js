@@ -160,10 +160,13 @@ function rowHtml(g) {
   const steamLink = g.steam_appid ? `<a href="https://store.steampowered.com/app/${g.steam_appid}/" target="_blank" rel="noopener" title="${escapeHtml(updatedTitle)}">Steam &#8599;</a>` : "";
   const protonLink = g.steam_appid ? `<a href="https://www.protondb.com/app/${g.steam_appid}" target="_blank" rel="noopener" title="${escapeHtml(updatedTitle)}">ProtonDB &#8599;</a>` : "";
   const refreshBtn = `<button class="row-refresh" data-key="${escapeHtml(g.key)}" data-title="${escapeHtml(g.title)}" title="Refetch this game's Steam &amp; ProtonDB data">&#8635; Refetch</button>`;
-  const linksCell = (steamLink || protonLink) ? `${steamLink}${protonLink}${refreshBtn}` : `<span class="none">&mdash;</span>${refreshBtn}`;
+  const fixBtn = `<button class="row-fix" data-key="${escapeHtml(g.key)}" data-title="${escapeHtml(g.title)}" title="Paste the correct Steam store URL or App ID">Fix match</button>`;
+  const linksCell = (steamLink || protonLink) ? `${steamLink}${protonLink}${refreshBtn}${fixBtn}` : `<span class="none">&mdash;</span>${refreshBtn}${fixBtn}`;
+
+  const manualTag = g.manualOverride ? `<span class="f2p" title="Manually matched">manual</span>` : "";
 
   return `<tr>
-    <td class="title-cell"><span class="t">${escapeHtml(g.title)}${f2p}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</td>
+    <td class="title-cell"><span class="t">${escapeHtml(g.title)}${f2p}${manualTag}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</td>
     <td><div class="genres">${genreTags || '<span class="genre-tag">&mdash;</span>'}</div></td>
     <td>${reviewCell}</td>
     <td>${protonCell}</td>
@@ -250,6 +253,36 @@ chrome.runtime.onMessage.addListener(message => {
   }
 });
 
+function parseAppId(input) {
+  const trimmed = input.trim();
+  if (/^\d+$/.test(trimmed)) return trimmed;
+  const m = trimmed.match(/\/app\/(\d+)/);
+  return m ? m[1] : null;
+}
+
+function fixMatch(key, title) {
+  const input = window.prompt(`Paste the correct Steam store URL or App ID for "${title}":`);
+  if (!input) return;
+  const appid = parseAppId(input);
+  if (!appid) {
+    window.alert("Couldn't find an App ID in that — paste something like https://store.steampowered.com/app/337000/ or just 337000.");
+    return;
+  }
+  REFRESHING.add(key);
+  renderTable();
+  chrome.runtime.sendMessage({ type: "SET_MANUAL_MATCH", title, appid }, resp => {
+    REFRESHING.delete(key);
+    if (resp?.ok) {
+      STEAM_CACHE[key] = resp.entry;
+      buildGames();
+    } else {
+      window.alert(resp?.error || "Could not fetch that App ID.");
+    }
+    renderFilters();
+    renderTable();
+  });
+}
+
 function refreshSingleGame(key, title) {
   if (REFRESHING.has(key)) return;
   REFRESHING.add(key);
@@ -313,8 +346,10 @@ async function init() {
   el("q").addEventListener("input", e => { state.q = e.target.value.toLowerCase(); renderTable(); });
   el("sort").addEventListener("change", e => { state.sort = e.target.value; renderTable(); });
   el("rows").addEventListener("click", e => {
-    const btn = e.target.closest(".row-refresh");
-    if (btn) refreshSingleGame(btn.dataset.key, btn.dataset.title);
+    const refreshBtn = e.target.closest(".row-refresh");
+    if (refreshBtn) return refreshSingleGame(refreshBtn.dataset.key, refreshBtn.dataset.title);
+    const fixBtn = e.target.closest(".row-fix");
+    if (fixBtn) return fixMatch(fixBtn.dataset.key, fixBtn.dataset.title);
   });
 }
 

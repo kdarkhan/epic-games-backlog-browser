@@ -101,21 +101,37 @@ async function refreshLibrary() {
 }
 
 // --- Steam / ProtonDB resolution, runs directly in the service worker ---
+// Signals a search hit is an add-on rather than the base game (DLC packs, access
+// passes, etc. often share more words with a short query than the actual base game
+// does once a publisher has renamed/merged it — e.g. "HITMAN" vs. the current Steam
+// listing "HITMAN World of Assassination"). Penalize these unless the query itself
+// uses the word, so a real game legitimately named e.g. "... Pack" isn't punished.
+const ADDON_SIGNALS = ["dlc", "expansion", "access pass", "season pass", "soundtrack", "artbook", "demo", "pack", "upgrade"];
+
 async function steamSearch(title) {
   const url = new URL(STEAM_SEARCH);
-  url.searchParams.set("term", title);
+  // Steam's search treats "-" as a NOT operator (e.g. "Deus Ex - Mankind Divided" → 0 results),
+  // and Epic titles often use " - " where Steam uses ":". Strip punctuation before querying.
+  const queryNorm = normTitle(title);
+  url.searchParams.set("term", queryNorm);
   url.searchParams.set("l", "english");
   url.searchParams.set("cc", "US");
   const res = await fetch(url.toString());
   if (!res.ok) return null;
   const items = (await res.json()).items || [];
   if (!items.length) return null;
+
   let best = null, bestScore = 0;
   for (const item of items) {
-    const score = titleSimilarity(title, item.name);
+    let score = titleSimilarity(title, item.name);
+    const nameLower = item.name.toLowerCase();
+    const isAddon = ADDON_SIGNALS.some(sig => nameLower.includes(sig) && !queryNorm.includes(sig));
+    if (isAddon) score *= 0.3;
     if (score > bestScore) { bestScore = score; best = item; }
   }
-  return bestScore >= 0.5 ? best.id : null;
+  // Higher bar than a plain "more than half the words match" — a wrong sibling title in
+  // the same franchise (sequel, edition, spin-off) can tie a loose threshold by accident.
+  return bestScore >= 0.6 ? best.id : null;
 }
 
 async function steamDetails(appid) {
@@ -193,6 +209,19 @@ function appidDelay(entry) {
   return entry.steam_appid ? 350 : 120;
 }
 
+async function setManualMatch(title, appid) {
+  const { steamCache = {} } = await chrome.storage.local.get("steamCache");
+  const key = normTitle(title);
+  const entry = { title, steam_appid: appid, manualOverride: true };
+  Object.assign(entry, await steamDetails(appid));
+  Object.assign(entry, await steamReviews(appid));
+  Object.assign(entry, await protonDbInfo(appid));
+  entry.resolvedAt = Date.now();
+  steamCache[key] = entry;
+  await chrome.storage.local.set({ steamCache });
+  return entry;
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "REFRESH_LIBRARY") {
     refreshLibrary()
@@ -205,6 +234,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chrome.runtime.sendMessage({ type: "STEAM_ENTRY_RESOLVED", key, entry }).catch(() => {});
     }, !!message.force)
       .then(steamCache => sendResponse({ ok: true, steamCache }))
+      .catch(err => sendResponse({ ok: false, error: err.message }));
+    return true;
+  }
+  if (message.type === "SET_MANUAL_MATCH") {
+    setManualMatch(message.title, message.appid)
+      .then(entry => sendResponse({ ok: true, entry }))
       .catch(err => sendResponse({ ok: false, error: err.message }));
     return true;
   }
