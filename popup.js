@@ -265,7 +265,20 @@ async function doRefresh() {
   });
 }
 
+function initTabMode() {
+  const isTab = new URLSearchParams(location.search).get("mode") === "tab";
+  if (isTab) {
+    document.body.classList.add("tab-mode");
+    el("expandBtn").hidden = true;
+  } else {
+    el("expandBtn").addEventListener("click", () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL("popup.html?mode=tab") });
+    });
+  }
+}
+
 async function init() {
+  initTabMode();
   await loadEmbedded();
   await loadStorage();
   buildGames();

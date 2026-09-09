@@ -28,6 +28,12 @@ body{
   font-family:"Work Sans", ui-sans-serif, system-ui, sans-serif;
   font-size:12.5px; line-height:1.4;
 }
+/* opened via "Open in tab" — a normal, freely resizable browser tab instead of the fixed-size action popup */
+body.tab-mode{
+  width:100%; max-width:1200px; margin:0 auto;
+  height:100vh; max-height:none;
+}
+body.tab-mode .chiprow{max-width:420px;}
 
 .topbar{
   display:flex; align-items:flex-end; justify-content:space-between;
@@ -54,6 +60,12 @@ h1{
 }
 .btn-primary:hover{filter:brightness(1.08);}
 .btn-primary:disabled{opacity:0.55; cursor:default;}
+.btn-ghost{
+  font-family:"Work Sans", sans-serif; font-weight:600; font-size:0.74rem;
+  background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:5px;
+  padding:0.42rem 0.7rem; cursor:pointer; white-space:nowrap;
+}
+.btn-ghost:hover{border-color:var(--accent); color:var(--accent);}
 
 .progress{
   margin:0 0.9rem 0.5rem; padding:0.4rem 0.6rem; border-radius:5px;
