@@ -163,7 +163,7 @@ function rowHtml(g) {
 
   const updatedTitle = g.resolvedAt
     ? `Updated ${relTime(g.resolvedAt)} (${new Date(g.resolvedAt).toLocaleString()})`
-    : "Bundled with the extension — exact fetch date unknown; use Refetch to update";
+    : "Never successfully fetched — use Refetch or Fix match";
   const steamLink = g.steam_appid ? `<a href="https://store.steampowered.com/app/${g.steam_appid}/" target="_blank" rel="noopener" title="${escapeHtml(updatedTitle)}">Steam &#8599;</a>` : "";
   const protonLink = g.steam_appid ? `<a href="https://www.protondb.com/app/${g.steam_appid}" target="_blank" rel="noopener" title="${escapeHtml(updatedTitle)}">ProtonDB &#8599;</a>` : "";
   const refreshBtn = `<button class="row-refresh" data-key="${escapeHtml(g.key)}" data-title="${escapeHtml(g.title)}" title="Refetch this game's Steam &amp; ProtonDB data">&#8635; Refetch</button>`;
