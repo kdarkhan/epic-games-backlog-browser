@@ -140,7 +140,8 @@ function rowHtml(g) {
     </tr>`;
   }
   const year = g.release_date ? (String(g.release_date).match(/\d{4}/) || [])[0] : null;
-  const sub = [year, g.steam_appid ? null : "no Steam listing"].filter(Boolean).join(" &middot; ");
+  const claimed = g.purchaseDateMillis ? `claimed ${new Date(g.purchaseDateMillis).toLocaleDateString()}` : null;
+  const sub = [year, claimed, g.steam_appid ? null : "no Steam listing"].filter(Boolean).join(" &middot; ");
   const f2p = g.is_free ? '<span class="f2p">F2P</span>' : "";
   const genreTags = (g.genres || []).slice(0, 3).map(gen => `<span class="genre-tag">${escapeHtml(gen)}</span>`).join("");
 
@@ -208,6 +209,10 @@ function renderTable() {
     list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
   } else if (state.sort === "proton") {
     list.sort((a, b) => protonRank(protonKey(a)) - protonRank(protonKey(b)));
+  } else if (state.sort === "claimdate-desc") {
+    list.sort((a, b) => (b.purchaseDateMillis || 0) - (a.purchaseDateMillis || 0));
+  } else if (state.sort === "claimdate-asc") {
+    list.sort((a, b) => (a.purchaseDateMillis || 0) - (b.purchaseDateMillis || 0));
   } else {
     list.sort((a, b) => a.title.localeCompare(b.title));
   }
