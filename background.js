@@ -108,12 +108,39 @@ async function refreshLibrary() {
 // uses the word, so a real game legitimately named e.g. "... Pack" isn't punished.
 const ADDON_SIGNALS = ["dlc", "expansion", "access pass", "season pass", "soundtrack", "artbook", "demo", "pack", "upgrade"];
 
-async function steamSearch(title) {
+// Titles Steam's own storesearch endpoint can never return, regardless of query, because
+// Valve delisted them from search (not from the store — appdetails/appreviews still work
+// fine by App ID). Known permanent cases, not a fuzzy-match judgment call like Hitman.
+const SEARCH_DELISTED_APPIDS = {
+  "rocket league": 252950,
+};
+
+// Steam's storesearch appears to require most/all query terms to loosely match, so a
+// trailing qualifier the base app's own Steam listing doesn't carry in its name — e.g.
+// Epic's "Pillars of Eternity - Definitive Edition" vs. Steam's plain "Pillars of
+// Eternity" — can zero out the whole search. These are almost always re-releases of a
+// base game, not a separate app, so retry with the suffix stripped when the first pass
+// comes up empty.
+// This only ever runs after the direct full-title search already came up empty, so it's
+// safe to be broad: a game genuinely named "... Edition" as part of its real title would
+// already have matched on the first pass and never reach here.
+const EDITION_SUFFIXES = [
+  /\s+(game of the year|goty) edition$/,
+  /\s+\S+ edition$/,
+  /\s+remastered$/,
+  /\s+directors cut$/,
+];
+
+function stripEditionSuffix(normalized) {
+  for (const re of EDITION_SUFFIXES) {
+    if (re.test(normalized)) return normalized.replace(re, "");
+  }
+  return null;
+}
+
+async function searchOnce(queryTerm, originalTitle) {
   const url = new URL(STEAM_SEARCH);
-  // Steam's search treats "-" as a NOT operator (e.g. "Deus Ex - Mankind Divided" → 0 results),
-  // and Epic titles often use " - " where Steam uses ":". Strip punctuation before querying.
-  const queryNorm = normTitle(title);
-  url.searchParams.set("term", queryNorm);
+  url.searchParams.set("term", queryTerm);
   url.searchParams.set("l", "english");
   url.searchParams.set("cc", "US");
   const res = await fetch(url.toString());
@@ -123,15 +150,35 @@ async function steamSearch(title) {
 
   let best = null, bestScore = 0;
   for (const item of items) {
-    let score = titleSimilarity(title, item.name);
+    let score = titleSimilarity(originalTitle, item.name);
     const nameLower = item.name.toLowerCase();
-    const isAddon = ADDON_SIGNALS.some(sig => nameLower.includes(sig) && !queryNorm.includes(sig));
+    const isAddon = ADDON_SIGNALS.some(sig => nameLower.includes(sig) && !queryTerm.includes(sig));
     if (isAddon) score *= 0.3;
     if (score > bestScore) { bestScore = score; best = item; }
   }
   // Higher bar than a plain "more than half the words match" — a wrong sibling title in
   // the same franchise (sequel, edition, spin-off) can tie a loose threshold by accident.
   return bestScore >= 0.6 ? best.id : null;
+}
+
+async function steamSearch(title) {
+  const queryNorm = normTitle(title);
+  const pinned = SEARCH_DELISTED_APPIDS[queryNorm];
+  if (pinned) return pinned;
+
+  const direct = await searchOnce(queryNorm, title);
+  if (direct) return direct;
+
+  const stripped = stripEditionSuffix(queryNorm);
+  if (stripped && stripped !== queryNorm) {
+    // Score against the stripped title too, not just the full original — an edition
+    // qualifier is a much bigger relative share of a short one-word title (e.g.
+    // "HUMANKIND Standard Edition" vs. base "HUMANKIND") than a long one, so scoring
+    // against the un-stripped title can reject an otherwise-perfect match.
+    const viaBaseTitle = await searchOnce(stripped, stripped);
+    if (viaBaseTitle) return viaBaseTitle;
+  }
+  return null;
 }
 
 async function steamDetails(appid) {
