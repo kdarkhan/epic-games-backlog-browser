@@ -22,6 +22,12 @@ function relTime(ms) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
+function epicSearchUrl(title) {
+  // Order history gives us a title only, not the product slug, so this is a
+  // search results link rather than a direct product page.
+  return `https://store.epicgames.com/en-US/browse?q=${encodeURIComponent(title)}&sortBy=relevancy&category=Game`;
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -126,7 +132,7 @@ function rowHtml(g) {
   const refreshing = REFRESHING.has(g.key);
   if (g.pending || refreshing) {
     return `<tr>
-      <td class="title-cell"><span class="t">${escapeHtml(g.title)}</span></td>
+      <td class="title-cell"><span class="t"><a href="${epicSearchUrl(g.title)}" target="_blank" rel="noopener" title="Search for this title on the Epic Games Store">${escapeHtml(g.title)}</a></span></td>
       <td>&mdash;</td>
       <td><span class="badge neutral">${refreshing ? "Refreshing&hellip;" : "Resolving&hellip;"}</span></td>
       <td><span class="stamp spinner">&hellip;</span></td>
@@ -166,7 +172,7 @@ function rowHtml(g) {
   const manualTag = g.manualOverride ? `<span class="f2p" title="Manually matched">manual</span>` : "";
 
   return `<tr>
-    <td class="title-cell"><span class="t">${escapeHtml(g.title)}${f2p}${manualTag}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</td>
+    <td class="title-cell"><span class="t"><a href="${epicSearchUrl(g.title)}" target="_blank" rel="noopener" title="Search for this title on the Epic Games Store">${escapeHtml(g.title)}</a>${f2p}${manualTag}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</td>
     <td><div class="genres">${genreTags || '<span class="genre-tag">&mdash;</span>'}</div></td>
     <td>${reviewCell}</td>
     <td>${protonCell}</td>
