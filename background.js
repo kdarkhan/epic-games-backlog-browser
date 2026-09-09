@@ -161,9 +161,10 @@ async function protonDbInfo(appid) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function resolveSteamInfo(titles, sendProgress) {
+async function resolveSteamInfo(titles, sendProgress, force = false) {
   const { steamCache = {} } = await chrome.storage.local.get("steamCache");
-  const todo = [...new Set(titles)].filter(t => !(normTitle(t) in steamCache));
+  const unique = [...new Set(titles)];
+  const todo = force ? unique : unique.filter(t => !(normTitle(t) in steamCache));
 
   for (const title of todo) {
     const key = normTitle(title);
@@ -202,7 +203,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "RESOLVE_STEAM_INFO") {
     resolveSteamInfo(message.titles || [], (key, entry) => {
       chrome.runtime.sendMessage({ type: "STEAM_ENTRY_RESOLVED", key, entry }).catch(() => {});
-    })
+    }, !!message.force)
       .then(steamCache => sendResponse({ ok: true, steamCache }))
       .catch(err => sendResponse({ ok: false, error: err.message }));
     return true;

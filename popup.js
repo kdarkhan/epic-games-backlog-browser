@@ -5,6 +5,7 @@ let ORDER_HISTORY = [];
 let ORDER_HISTORY_FETCHED_AT = null;
 let STEAM_CACHE = {};
 let GAMES = [];
+const REFRESHING = new Set();
 
 const state = { q: "", genre: null, review: null, proton: null, sort: "reviewscore" };
 
@@ -122,11 +123,12 @@ function renderStats(list) {
 }
 
 function rowHtml(g) {
-  if (g.pending) {
+  const refreshing = REFRESHING.has(g.key);
+  if (g.pending || refreshing) {
     return `<tr>
       <td class="title-cell"><span class="t">${escapeHtml(g.title)}</span></td>
       <td>&mdash;</td>
-      <td><span class="badge neutral">Resolving&hellip;</span></td>
+      <td><span class="badge neutral">${refreshing ? "Refreshing&hellip;" : "Resolving&hellip;"}</span></td>
       <td><span class="stamp spinner">&hellip;</span></td>
       <td class="links"><span class="none">&mdash;</span></td>
     </tr>`;
@@ -152,9 +154,13 @@ function rowHtml(g) {
   const pm = PROTON_META[pk] || PROTON_META.unlisted;
   const protonCell = `<span class="stamp ${pm.cls}">${pm.label}</span>`;
 
-  const steamLink = g.steam_appid ? `<a href="https://store.steampowered.com/app/${g.steam_appid}/" target="_blank" rel="noopener">Steam &#8599;</a>` : "";
-  const protonLink = g.steam_appid ? `<a href="https://www.protondb.com/app/${g.steam_appid}" target="_blank" rel="noopener">ProtonDB &#8599;</a>` : "";
-  const linksCell = (steamLink || protonLink) ? `${steamLink}${protonLink}` : `<span class="none">&mdash;</span>`;
+  const updatedTitle = g.resolvedAt
+    ? `Updated ${relTime(g.resolvedAt)} (${new Date(g.resolvedAt).toLocaleString()})`
+    : "Bundled with the extension — exact fetch date unknown; use Refetch to update";
+  const steamLink = g.steam_appid ? `<a href="https://store.steampowered.com/app/${g.steam_appid}/" target="_blank" rel="noopener" title="${escapeHtml(updatedTitle)}">Steam &#8599;</a>` : "";
+  const protonLink = g.steam_appid ? `<a href="https://www.protondb.com/app/${g.steam_appid}" target="_blank" rel="noopener" title="${escapeHtml(updatedTitle)}">ProtonDB &#8599;</a>` : "";
+  const refreshBtn = `<button class="row-refresh" data-key="${escapeHtml(g.key)}" data-title="${escapeHtml(g.title)}" title="Refetch this game's Steam &amp; ProtonDB data">&#8635; Refetch</button>`;
+  const linksCell = (steamLink || protonLink) ? `${steamLink}${protonLink}${refreshBtn}` : `<span class="none">&mdash;</span>${refreshBtn}`;
 
   return `<tr>
     <td class="title-cell"><span class="t">${escapeHtml(g.title)}${f2p}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</td>
@@ -238,10 +244,26 @@ function kickOffResolution() {
 chrome.runtime.onMessage.addListener(message => {
   if (message.type === "STEAM_ENTRY_RESOLVED") {
     STEAM_CACHE[message.key] = message.entry;
+    REFRESHING.delete(message.key);
     buildGames();
     scheduleRerender();
   }
 });
+
+function refreshSingleGame(key, title) {
+  if (REFRESHING.has(key)) return;
+  REFRESHING.add(key);
+  renderTable();
+  chrome.runtime.sendMessage({ type: "RESOLVE_STEAM_INFO", titles: [title], force: true }, resp => {
+    REFRESHING.delete(key);
+    if (resp?.ok) {
+      STEAM_CACHE = resp.steamCache;
+      buildGames();
+    }
+    renderFilters();
+    renderTable();
+  });
+}
 
 async function doRefresh() {
   const btn = el("refreshBtn");
@@ -290,6 +312,10 @@ async function init() {
   el("refreshBtn").addEventListener("click", doRefresh);
   el("q").addEventListener("input", e => { state.q = e.target.value.toLowerCase(); renderTable(); });
   el("sort").addEventListener("change", e => { state.sort = e.target.value; renderTable(); });
+  el("rows").addEventListener("click", e => {
+    const btn = e.target.closest(".row-refresh");
+    if (btn) refreshSingleGame(btn.dataset.key, btn.dataset.title);
+  });
 }
 
 init();
