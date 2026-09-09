@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Epic Games Backlog Browser",
+  "name": "Backlog Browser for Epic Games",
   "version": "0.1.0",
   "description": "Browse your claimed Epic Games freebies with Steam reviews and ProtonDB Deck compatibility.",
   "icons": {
