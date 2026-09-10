@@ -1,0 +1,168 @@
+<title>Backlog Browser Privacy Policy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --paper:#E9EBE6; --paper-2:#DDE1D8; --surface:#F5F6F2;
+    --ink:#1C2320; --ink-soft:#55625A; --line:#C7CDC3;
+    --accent:#2B5F6B; --accent-soft:#DCE7E6;
+    --good:#3F7D52; --good-tint:#E1EDE3;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#161B18; --paper-2:#1E2521; --surface:#202723;
+      --ink:#E7EBE6; --ink-soft:#A9B2AA; --line:#3A433C;
+      --accent:#6FB8C4; --accent-soft:#22383B;
+      --good:#6FBE83; --good-tint:#1E3226;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#161B18; --paper-2:#1E2521; --surface:#202723;
+    --ink:#E7EBE6; --ink-soft:#A9B2AA; --line:#3A433C;
+    --accent:#6FB8C4; --accent-soft:#22383B;
+    --good:#6FBE83; --good-tint:#1E3226;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Work Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size:16px; line-height:1.6;
+  }
+  .wrap{max-width:680px; margin:0 auto; padding:3rem 1.5rem 5rem;}
+
+  .eyebrow{
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+    font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--ink-soft); margin:0 0 0.6rem;
+  }
+  h1{
+    font-family:"Big Shoulders Display", ui-sans-serif, sans-serif;
+    font-weight:800; text-transform:uppercase; letter-spacing:0.01em;
+    font-size:clamp(2rem, 5vw, 2.8rem); line-height:0.98; margin:0 0 0.7rem;
+    text-wrap:balance; color:var(--ink);
+  }
+  .lede{
+    font-size:1.05rem; color:var(--ink-soft); max-width:58ch; margin:0 0 2.2rem;
+  }
+
+  .headline-box{
+    background:var(--good-tint); border:1px solid var(--good);
+    border-radius:8px; padding:1rem 1.2rem; margin:0 0 2.5rem;
+    display:flex; gap:0.8rem; align-items:flex-start;
+  }
+  .headline-box .mark{
+    font-family:"JetBrains Mono", monospace; font-weight:700; color:var(--good);
+    flex:0 0 auto; font-size:1.1rem; line-height:1.4;
+  }
+  .headline-box p{margin:0; color:var(--ink); font-size:0.98rem;}
+  .headline-box strong{color:var(--good);}
+
+  h2{
+    font-family:"Big Shoulders Display", ui-sans-serif, sans-serif;
+    font-weight:700; text-transform:uppercase; letter-spacing:0.02em;
+    font-size:1.15rem; color:var(--ink); margin:2.4rem 0 0.9rem;
+    padding-bottom:0.5rem; border-bottom:1px solid var(--line);
+  }
+  p{margin:0 0 1rem;}
+  ul{margin:0 0 1rem; padding-left:1.3rem;}
+  li{margin-bottom:0.5rem;}
+  code{
+    font-family:"JetBrains Mono", monospace; font-size:0.88em;
+    background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:0.1em 0.4em;
+  }
+
+  .perm-table{width:100%; border-collapse:collapse; margin:0.5rem 0 1.2rem; font-size:0.92rem;}
+  .perm-table th{
+    text-align:left; font-family:"JetBrains Mono", monospace; font-size:0.68rem;
+    letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft);
+    padding:0.5rem 0.7rem; border-bottom:1px solid var(--line);
+  }
+  .perm-table td{padding:0.6rem 0.7rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  .perm-table code{white-space:nowrap;}
+
+  .updated{
+    margin-top:3rem; padding-top:1.2rem; border-top:1px solid var(--line);
+    font-family:"JetBrains Mono", monospace; font-size:0.8rem; color:var(--ink-soft);
+  }
+  a{color:var(--accent);}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Backlog Browser for Epic Games &middot; browser extension</p>
+  <h1>Privacy Policy</h1>
+  <p class="lede">
+    This extension shows your claimed Epic Games Store titles alongside Steam review data
+    and ProtonDB Deck-compatibility reports. Here's exactly what it does with your data.
+  </p>
+
+  <div class="headline-box">
+    <span class="mark">&#10003;</span>
+    <p><strong>The short version:</strong> nothing you do in this extension is sent to us, because there is no "us" to send it to &mdash; there is no backend server. Every request goes directly from your browser to Epic, Steam, or ProtonDB, and every result is cached only on your own device.</p>
+  </div>
+
+  <h2>What the extension reads</h2>
+  <p>
+    When you click <strong>Refresh library</strong>, the extension opens a hidden background
+    tab to epicgames.com and reads your order history using your existing logged-in session
+    &mdash; the same way the epicgames.com website itself does when you view your account.
+    It does not see your password, and it does not use any login flow of its own.
+  </p>
+
+  <h2>What it looks up, and where</h2>
+  <p>
+    For each game in your order history, the extension looks up public review data from
+    Steam (<code>store.steampowered.com</code>) and public Deck-compatibility reports from
+    ProtonDB (<code>protondb.com</code>). These are the same public pages anyone can view
+    on those sites; no account or login is used for either.
+  </p>
+
+  <h2>Where results are stored</h2>
+  <p>
+    Your order history and every Steam/ProtonDB lookup are cached in your browser's own
+    local extension storage, on your device only. Nothing is synced to a server, uploaded
+    anywhere, or shared with the developer. Uninstalling the extension removes this data.
+  </p>
+
+  <h2>What permissions it asks for, and why</h2>
+  <table class="perm-table">
+    <thead>
+      <tr><th>Permission</th><th>What it's for</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>storage</code></td>
+        <td>Cache your order history and Steam/ProtonDB results locally, so they aren't re-fetched every time you open the extension.</td>
+      </tr>
+      <tr>
+        <td><code>scripting</code></td>
+        <td>Run a short script inside the hidden epicgames.com tab to read your order history using your own session.</td>
+      </tr>
+      <tr>
+        <td><code>tabs</code></td>
+        <td>Open and automatically close that hidden background tab when you click Refresh library.</td>
+      </tr>
+      <tr>
+        <td>Host access to <code>epicgames.com</code>, <code>steampowered.com</code>, <code>protondb.com</code></td>
+        <td>The only three sites the extension ever talks to, exactly as described above.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What we don't do</h2>
+  <ul>
+    <li>No analytics, telemetry, or crash reporting of any kind.</li>
+    <li>No advertising, and no data is ever sold or shared with third parties.</li>
+    <li>No account, sign-up, or login is required to use the extension itself.</li>
+  </ul>
+
+  <h2>Changes to this policy</h2>
+  <p>
+    If this policy changes, the updated version will be posted at this same link with a
+    new date below.
+  </p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: <a href="mailto:dev.kdarkhan@gmail.com">dev.kdarkhan@gmail.com</a></p>
+
+  <p class="updated">Last updated: 2026-09-10</p>
+</div>
