@@ -8,7 +8,7 @@
   --neutral:#8A8F86; --neutral-tint:#E4E6E0;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --paper:#161B18; --paper-2:#1E2521; --surface:#202723;
     --ink:#E7EBE6; --ink-soft:#A9B2AA; --line:#3A433C;
     --accent:#6FB8C4; --accent-soft:#22383B;
@@ -17,6 +17,16 @@
     --reject:#E07A63; --reject-tint:#3A2019;
     --neutral:#7C837B; --neutral-tint:#262C27;
   }
+}
+/* explicit choice wins over the OS preference in either direction */
+:root[data-theme="dark"]{
+  --paper:#161B18; --paper-2:#1E2521; --surface:#202723;
+  --ink:#E7EBE6; --ink-soft:#A9B2AA; --line:#3A433C;
+  --accent:#6FB8C4; --accent-soft:#22383B;
+  --good:#6FBE83; --good-tint:#1E3226;
+  --caution:#D9A63D; --caution-tint:#3A2E12;
+  --reject:#E07A63; --reject-tint:#3A2019;
+  --neutral:#7C837B; --neutral-tint:#262C27;
 }
 
 *{box-sizing:border-box;}

@@ -356,6 +356,39 @@ async function doRefresh() {
   });
 }
 
+const THEME_ORDER = ["auto", "light", "dark"];
+const THEME_META = {
+  auto: { icon: "\u{1F313}", label: "Auto (follows system)" },
+  light: { icon: "\u{2600}\u{FE0F}", label: "Light" },
+  dark: { icon: "\u{1F319}", label: "Dark" },
+};
+
+function currentTheme() {
+  const t = localStorage.getItem("theme");
+  return t === "light" || t === "dark" ? t : "auto";
+}
+
+function applyTheme(theme) {
+  if (theme === "light" || theme === "dark") {
+    document.documentElement.setAttribute("data-theme", theme);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+  const meta = THEME_META[theme];
+  const btn = el("themeToggle");
+  btn.textContent = meta.icon;
+  btn.title = `Theme: ${meta.label} (click to change)`;
+}
+
+function initTheme() {
+  applyTheme(currentTheme());
+  el("themeToggle").addEventListener("click", () => {
+    const next = THEME_ORDER[(THEME_ORDER.indexOf(currentTheme()) + 1) % THEME_ORDER.length];
+    if (next === "auto") localStorage.removeItem("theme"); else localStorage.setItem("theme", next);
+    applyTheme(next);
+  });
+}
+
 function initTabMode() {
   const isTab = new URLSearchParams(location.search).get("mode") === "tab";
   if (isTab) {
@@ -369,6 +402,7 @@ function initTabMode() {
 }
 
 async function init() {
+  initTheme();
   initTabMode();
   await loadEmbedded();
   await loadStorage();
