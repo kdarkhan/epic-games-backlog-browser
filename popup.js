@@ -85,6 +85,10 @@ function reviewKey(g) {
   if (!g.review_desc) return "sparse";
   return REVIEW_ORDER.includes(g.review_desc) ? g.review_desc : "sparse";
 }
+function releaseYear(g) {
+  const m = g.release_date ? String(g.release_date).match(/\d{4}/) : null;
+  return m ? parseInt(m[0], 10) : null;
+}
 
 function toggleSelection(set, value, shiftKey) {
   if (shiftKey) {
@@ -238,6 +242,15 @@ function renderTable() {
     list.sort((a, b) => (b.purchaseDateMillis || 0) - (a.purchaseDateMillis || 0));
   } else if (state.sort === "claimdate-asc") {
     list.sort((a, b) => (a.purchaseDateMillis || 0) - (b.purchaseDateMillis || 0));
+  } else if (state.sort === "releaseyear-desc" || state.sort === "releaseyear-asc") {
+    const dir = state.sort === "releaseyear-desc" ? -1 : 1;
+    list.sort((a, b) => {
+      const ay = releaseYear(a), by = releaseYear(b);
+      if (ay === null && by === null) return 0;
+      if (ay === null) return 1; // unknown release year always sinks to the bottom
+      if (by === null) return -1;
+      return dir * (ay - by);
+    });
   } else {
     list.sort((a, b) => a.title.localeCompare(b.title));
   }
