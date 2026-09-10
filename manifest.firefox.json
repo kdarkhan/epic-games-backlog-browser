@@ -30,7 +30,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "claim-ledger@localhost",
+      "id": "{fcf33aa2-e460-4348-9f1a-611ce42df2ab}",
       "strict_min_version": "109.0"
     }
   }
