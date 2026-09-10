@@ -86,6 +86,17 @@ function reviewKey(g) {
   return REVIEW_ORDER.includes(g.review_desc) ? g.review_desc : "sparse";
 }
 
+function toggleSelection(set, value, shiftKey) {
+  if (shiftKey) {
+    if (set.has(value)) set.delete(value); else set.add(value);
+  } else if (set.size === 1 && set.has(value)) {
+    set.clear();
+  } else {
+    set.clear();
+    set.add(value);
+  }
+}
+
 function buildChips(container, options, labelFn, stateKey) {
   container.innerHTML = "";
   options.forEach(opt => {
@@ -96,14 +107,7 @@ function buildChips(container, options, labelFn, stateKey) {
     chip.textContent = labelFn(opt);
     chip.title = "Click to select only this; Shift-click to add/remove from selection";
     chip.addEventListener("click", (e) => {
-      if (e.shiftKey) {
-        if (selected.has(opt)) selected.delete(opt); else selected.add(opt);
-      } else if (selected.size === 1 && selected.has(opt)) {
-        selected.clear();
-      } else {
-        selected.clear();
-        selected.add(opt);
-      }
+      toggleSelection(selected, opt, e.shiftKey);
       renderFilters();
       renderTable();
     });
@@ -115,6 +119,11 @@ function renderFilters() {
   const genreCounts = new Map();
   GAMES.forEach(g => (g.genres || []).forEach(gen => genreCounts.set(gen, (genreCounts.get(gen) || 0) + 1)));
   const topGenres = [...genreCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14).map(e => e[0]);
+  // keep a genre visible in the chip row while it's an active filter, even if it's too
+  // uncommon to make the popularity cut on its own (e.g. clicked from a game's row)
+  for (const g of state.genre) {
+    if (!topGenres.includes(g)) topGenres.push(g);
+  }
 
   const reviewPresent = new Set(GAMES.map(reviewKey));
   const reviewOptions = REVIEW_ORDER.filter(r => reviewPresent.has(r));
@@ -153,7 +162,13 @@ function rowHtml(g) {
   const claimed = g.purchaseDateMillis ? `claimed ${new Date(g.purchaseDateMillis).toLocaleDateString()}` : null;
   const sub = [year, claimed, g.steam_appid ? null : "no Steam listing"].filter(Boolean).join(" &middot; ");
   const f2p = g.is_free ? '<span class="f2p">F2P</span>' : "";
-  const genreTags = (g.genres || []).slice(0, 3).map(gen => `<span class="genre-tag">${escapeHtml(gen)}</span>`).join("");
+  // Show an active-filter genre even if it wouldn't otherwise make the 3-tag preview cut —
+  // otherwise a game can correctly match a genre filter (matching uses the full list) while
+  // showing no visible reason why, since the row only ever displayed the first 3 genres.
+  const orderedGenres = [...(g.genres || [])].sort((a, b) => (state.genre.has(b) ? 1 : 0) - (state.genre.has(a) ? 1 : 0));
+  const genreTags = orderedGenres.slice(0, 3).map(gen =>
+    `<span class="genre-tag genre-tag-clickable${state.genre.has(gen) ? " active" : ""}" data-genre="${escapeHtml(gen)}" title="Click to filter by ${escapeHtml(gen)}; Shift-click to add to current filter">${escapeHtml(gen)}</span>`
+  ).join("");
 
   let reviewCell;
   if (!g.steam_appid) {
@@ -371,6 +386,12 @@ async function init() {
     if (refreshBtn) return refreshSingleGame(refreshBtn.dataset.key, refreshBtn.dataset.title);
     const fixBtn = e.target.closest(".row-fix");
     if (fixBtn) return fixMatch(fixBtn.dataset.key, fixBtn.dataset.title);
+    const genreTag = e.target.closest(".genre-tag-clickable");
+    if (genreTag) {
+      toggleSelection(state.genre, genreTag.dataset.genre, e.shiftKey);
+      renderFilters();
+      renderTable();
+    }
   });
 }
 

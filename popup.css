@@ -149,6 +149,9 @@ tbody td{padding:0.4rem 0.6rem; vertical-align:top;}
   font-size:0.6rem; color:var(--ink-soft); background:var(--surface);
   border:1px solid var(--line); border-radius:3px; padding:0.05rem 0.32rem; white-space:nowrap;
 }
+.genre-tag-clickable{cursor:pointer;}
+.genre-tag-clickable:hover{border-color:var(--accent); color:var(--accent);}
+.genre-tag-clickable.active{background:var(--accent); border-color:var(--accent); color:var(--paper);}
 
 .badge{
   display:inline-flex; align-items:center; gap:0.3rem; font-size:0.68rem; font-weight:600;
